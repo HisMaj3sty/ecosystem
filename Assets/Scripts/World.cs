@@ -18,6 +18,12 @@ public class World : MonoBehaviour {
     [SerializeField]
     GameObject deer; // prefab for deer
 
+    [SerializeField]
+    GameObject charact; // character himself
+
+    [SerializeField]
+    GameObject tree; //prefab for tree generation
+
     GameObject[] animals = new GameObject[100]; // array of all animals that exist
 
     int animalcount; // number of currently existing animals
@@ -32,14 +38,13 @@ public class World : MonoBehaviour {
     [SerializeField]
     bool can_weather_change=true; //determines whether weather cycle is active or not
 
-    [SerializeField]
-    GameObject charact; // character himself
+    
 
     void Start () {
         if (can_weather_change) StartCoroutine(ChangeWeather()); //start weather cycle if allowed
         seed = Random.Range(0.01F, 0.04F); // generate a seed for map generation
-        GenerateChunk(0, 0, 100, 100); //generate the map itself
-        charact.transform.position = new Vector3(0, HeightFormula(0,0)+4, 0);
+        GenerateChunk(0, 0, 100, 100, 100); //generate the map itself
+        charact.transform.position = new Vector3(0, HeightFormula(0,0)+4, 0);//put character on map
         GenerateDeer(10); //generate animals
     }
 	
@@ -56,11 +61,12 @@ public class World : MonoBehaviour {
         return Mathf.RoundToInt(Mathf.PerlinNoise(z, x) * 45);
     }
 
-    void GenerateChunk(int startx, int startz, int wz, int wx)
+    void GenerateChunk(int startx, int startz, int wz, int wx, int woodiness)
     //a procedure for generating a chunk of blocks starting from block startz, startx
     //supposedly starting block doesnt exist
     //z -- front + back, x -- right + left, y -- up + down 
     //wz and wx define size of a chunk starting from block with coords startz, startx, starty
+    //woodiness -- parameter which defines number of trees generated in chunk
     {
         int x = startx, y = HeightFormula(startz, startx), z = startz;
         //coords of the fisrt block in chunk
@@ -198,6 +204,35 @@ public class World : MonoBehaviour {
                         }
                 }
             }
+
+        //OK, holes should be fixed, now we need to place a bit of trees here and there
+        int numberoftrees = Mathf.RoundToInt(Random.Range(woodiness * seed, woodiness*1F));
+        //randomly choose number of trees generated in chunk
+
+        int square = wz * wx; // calculate total square of chunk
+
+        int avg_distribution = square / numberoftrees; //how much of blocks are there for one tree for 
+                                                       //average cover of all the land
+
+        int lastplaced=0;
+        //number of the block where last tree was placed
+
+        for (int i = 1; i < wz; i++)
+            for (int j = 1; j < wx; j++)
+            {
+                int randomfactor = Random.Range(0, avg_distribution / 10);
+                //randomfactor should bring in some noise in destribution of trees
+
+                int block_x = x + j, block_z = z + i, block_y = HeightFormula(z + i * seed, x + j * seed);
+
+                if ((block_x + block_z - x - z + lastplaced) >= (avg_distribution - randomfactor))
+                {
+                    GameObject newtree = tree;
+                    newtree.transform.position= new Vector3(block_z, block_y, block_x);
+                    Instantiate(newtree);
+                }
+            }
+
     }
 
     //simply spawn given num of Deer
