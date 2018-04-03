@@ -43,7 +43,7 @@ public class World : MonoBehaviour {
     void Start () {
         if (can_weather_change) StartCoroutine(ChangeWeather()); //start weather cycle if allowed
         seed = Random.Range(0.01F, 0.04F); // generate a seed for map generation
-        GenerateChunk(0, 0, 100, 100, 100); //generate the map itself
+        GenerateChunk(0, 0, 100, 100, 50); //generate the map itself
         charact.transform.position = new Vector3(0, HeightFormula(0,0)+4, 0);//put character on map
         GenerateDeer(10); //generate animals
     }
@@ -206,30 +206,34 @@ public class World : MonoBehaviour {
             }
 
         //OK, holes should be fixed, now we need to place a bit of trees here and there
-        int numberoftrees = Mathf.RoundToInt(Random.Range(woodiness * seed, woodiness*1F));
-        //randomly choose number of trees generated in chunk
+
+        
 
         int square = wz * wx; // calculate total square of chunk
 
-        int avg_distribution = square / numberoftrees; //how much of blocks are there for one tree for 
+        int avg_distribution = square / woodiness; //how much of blocks are there for one tree for 
                                                        //average cover of all the land
 
         int lastplaced=0;
         //number of the block where last tree was placed
+        int numberofblocks=0;
+        //number of blocks counted
 
         for (int i = 1; i < wz; i++)
             for (int j = 1; j < wx; j++)
             {
-                int randomfactor = Random.Range(0, avg_distribution / 10);
+                int randomfactor = Random.Range(avg_distribution / 10, avg_distribution/2);
                 //randomfactor should bring in some noise in destribution of trees
 
                 int block_x = x + j, block_z = z + i, block_y = HeightFormula(z + i * seed, x + j * seed);
+                numberofblocks++;
 
-                if ((block_x + block_z - x - z + lastplaced) >= (avg_distribution - randomfactor))
+                if ((numberofblocks - lastplaced) >= (avg_distribution - randomfactor) && (numberofblocks - lastplaced) >= 5)
                 {
                     GameObject newtree = tree;
                     newtree.transform.position= new Vector3(block_z, block_y, block_x);
                     Instantiate(newtree);
+                    lastplaced = numberofblocks;
                 }
             }
 
