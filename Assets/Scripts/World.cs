@@ -11,6 +11,9 @@ public class World : MonoBehaviour {
     GameObject rainmaker; //prefab from unity assets that allow to make realistic rain
 
     [SerializeField]
+    GameObject Light; // gameobject which controls light on scene
+
+    [SerializeField]
     GameObject soil, stone; //prefabs for blocks out of which the world consists
 
     GameObject[,,] world = new GameObject[1000, 100, 1000]; //3-dimensional array of blocks that make up map
@@ -33,17 +36,33 @@ public class World : MonoBehaviour {
                 // the lower the value of seed is, the calmer generated landcape will be
 
     [SerializeField]
-    float raindelay = 120F;//delay wich determine when the rain will come again
+    float raindelay = 120F;//delay until next rain
+
+    [SerializeField]
+    float rainLenght = 100f; //determines how long the rain will go
+
+    [SerializeField]
+    float rainMaxIntensity = 0.5f; //determines max intensity that rain can possibly hit 
 
     [SerializeField]
     bool can_weather_change=true; //determines whether weather cycle is active or not
 
-    
+    [SerializeField]
+    bool generate_world = true; //determines whether the wrold is generated at start or not
+
+    bool isRainGoing = false; // wther the rain is going right now or not
+
+    float rainIntesifierTime = 3f, rainCurrentIntensity = 0f;
+    //first determines the delay inbetween rain intensifying cycle, second shows current rain intensity
+
+    float rainDecreasingTime = 1f;
+    //determines the delay inbetween rain decreasing cycle
+
 
     void Start () {
         if (can_weather_change) StartCoroutine(ChangeWeather()); //start weather cycle if allowed
         seed = Random.Range(0.01F, 0.04F); // generate a seed for map generation
-        GenerateChunk(0, 0, 100, 100, 50); //generate the map itself
+        if (generate_world) GenerateChunk(0, 0, 100, 100, 50); //generate the map itself
         charact.transform.position = new Vector3(0, HeightFormula(0,0)+4, 0);//put character on map
         GenerateDeer(10); //generate animals
     }
@@ -253,21 +272,55 @@ public class World : MonoBehaviour {
     }
 
     IEnumerator ChangeWeather() //If it is rainy changes to clear, if clear changes to rainy
-    {
+    { //ToDo Light games
         while (true)
         {
-            //ToDo make it better with making rain go in and out smoother
-            if (!rainmaker.activeSelf)
+            if (!isRainGoing)
             {
-                RenderSettings.skybox = skybox_rainy;
-                rainmaker.SetActive(true);
+                if (rainCurrentIntensity <= 0)//if weather is now clear
+                {
+                    rainCurrentIntensity = 0;
+                    (rainmaker.GetComponent("RainScript") as DigitalRuby.RainMaker.RainScript).RainIntensity = rainCurrentIntensity;
+                    RenderSettings.skybox.SetFloat("_Exposure", 1f);
+                    isRainGoing = true; //kickstarts the new cycle
+                    yield return new WaitForSeconds(raindelay);
+                }
+                else
+                {  
+                    rainCurrentIntensity -= 0.05f;
+                    if (rainCurrentIntensity <= 0f)
+                    {
+                        (rainmaker.GetComponent("RainScript") as DigitalRuby.RainMaker.RainScript).RainIntensity = 0;
+                    }
+                    else
+                    {
+                        (rainmaker.GetComponent("RainScript") as DigitalRuby.RainMaker.RainScript).RainIntensity = rainCurrentIntensity;
+                        if (RenderSettings.skybox.GetFloat("_Exposure") < 1f)
+                            RenderSettings.skybox.SetFloat("_Exposure", RenderSettings.skybox.GetFloat("_Exposure") + 0.05f);
+                    }
+                    if (rainCurrentIntensity < 0.2f) RenderSettings.skybox = skybox_clear;
+                    yield return new WaitForSeconds(rainDecreasingTime);
+                }
             }
             else
             {
-                RenderSettings.skybox = skybox_clear;
-                rainmaker.SetActive(false);
+                if (rainCurrentIntensity >= rainMaxIntensity)//if t is already raining to max
+                {
+                    rainCurrentIntensity = rainMaxIntensity;
+                    (rainmaker.GetComponent("RainScript") as DigitalRuby.RainMaker.RainScript).RainIntensity = rainCurrentIntensity;
+                    isRainGoing = false; //kickstarts decreasing the rain part
+                    yield return new WaitForSeconds(rainLenght);
+                }
+                else
+                {
+                    rainCurrentIntensity += 0.05f;
+                    (rainmaker.GetComponent("RainScript") as DigitalRuby.RainMaker.RainScript).RainIntensity = rainCurrentIntensity;
+                     if (RenderSettings.skybox.GetFloat("_Exposure") > 0.5f)
+                          RenderSettings.skybox.SetFloat("_Exposure", RenderSettings.skybox.GetFloat("_Exposure") - 0.17f);
+                    if (rainCurrentIntensity>0.2f) RenderSettings.skybox = skybox_rainy;
+                    yield return new WaitForSeconds(rainIntesifierTime);
+                }
             }
-            yield return new WaitForSeconds(raindelay);
         }
     }
 
