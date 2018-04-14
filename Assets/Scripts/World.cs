@@ -11,7 +11,7 @@ public class World : MonoBehaviour {
     GameObject rainmaker; //prefab from unity assets that allow to make realistic rain
 
     [SerializeField]
-    GameObject Light; // gameobject which controls light on scene
+    Light lightOnScene; // gameobject which controls light on scene
 
     [SerializeField]
     GameObject soil, stone; //prefabs for blocks out of which the world consists
@@ -60,9 +60,10 @@ public class World : MonoBehaviour {
 
 
     void Start () {
+        RenderSettings.skybox.SetFloat("_Exposure", 1);// just minor unity bugfix
         if (can_weather_change) StartCoroutine(ChangeWeather()); //start weather cycle if allowed
         seed = Random.Range(0.01F, 0.04F); // generate a seed for map generation
-        if (generate_world) GenerateChunk(0, 0, 100, 100, 50); //generate the map itself
+        if (generate_world) GenerateChunk(0, 0, 20, 20, 50); //generate the map itself
         charact.transform.position = new Vector3(0, HeightFormula(0,0)+4, 0);//put character on map
         GenerateDeer(10); //generate animals
     }
@@ -282,6 +283,7 @@ public class World : MonoBehaviour {
                     rainCurrentIntensity = 0;
                     (rainmaker.GetComponent("RainScript") as DigitalRuby.RainMaker.RainScript).RainIntensity = rainCurrentIntensity;
                     RenderSettings.skybox.SetFloat("_Exposure", 1f);
+                    lightOnScene.intensity = 1;
                     isRainGoing = true; //kickstarts the new cycle
                     yield return new WaitForSeconds(raindelay);
                 }
@@ -296,7 +298,10 @@ public class World : MonoBehaviour {
                     {
                         (rainmaker.GetComponent("RainScript") as DigitalRuby.RainMaker.RainScript).RainIntensity = rainCurrentIntensity;
                         if (RenderSettings.skybox.GetFloat("_Exposure") < 1f)
+                        {
                             RenderSettings.skybox.SetFloat("_Exposure", RenderSettings.skybox.GetFloat("_Exposure") + 0.05f);
+                            lightOnScene.intensity += 0.07f;
+                        }
                     }
                     if (rainCurrentIntensity < 0.2f) RenderSettings.skybox = skybox_clear;
                     yield return new WaitForSeconds(rainDecreasingTime);
@@ -315,8 +320,11 @@ public class World : MonoBehaviour {
                 {
                     rainCurrentIntensity += 0.05f;
                     (rainmaker.GetComponent("RainScript") as DigitalRuby.RainMaker.RainScript).RainIntensity = rainCurrentIntensity;
-                     if (RenderSettings.skybox.GetFloat("_Exposure") > 0.5f)
-                          RenderSettings.skybox.SetFloat("_Exposure", RenderSettings.skybox.GetFloat("_Exposure") - 0.17f);
+                    if (RenderSettings.skybox.GetFloat("_Exposure") > 0.5f && rainCurrentIntensity < 0.3f)
+                    {
+                        RenderSettings.skybox.SetFloat("_Exposure", RenderSettings.skybox.GetFloat("_Exposure") - 0.17f);
+                        lightOnScene.intensity -= 0.23f;
+                    }
                     if (rainCurrentIntensity>0.2f) RenderSettings.skybox = skybox_rainy;
                     yield return new WaitForSeconds(rainIntesifierTime);
                 }

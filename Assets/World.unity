@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.31178397, g: 0.39019066, b: 0.46546227, a: 1}
+  m_IndirectSpecularColor: {r: 0.44924474, g: 0.5620402, b: 0.66850615, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -279,7 +279,7 @@ MonoBehaviour:
   skybox_clear: {fileID: 2100000, guid: e6d0d6fe1132ba749b82c6387677808f, type: 2}
   skybox_rainy: {fileID: 2100000, guid: ece5f655714eb0d48bb27b6a40187104, type: 2}
   rainmaker: {fileID: 1166594956}
-  Light: {fileID: 9783390}
+  lightOnScene: {fileID: 9783391}
   soil: {fileID: 1710907773341994, guid: ab2dcd2dad1ea804c9418ff62a07273e, type: 2}
   stone: {fileID: 1710907773341994, guid: ab2dcd2dad1ea804c9418ff62a07273e, type: 2}
   deer: {fileID: 1669463093378998, guid: 65228b8c4c05d9545925d1349f480358, type: 2}
@@ -290,7 +290,7 @@ MonoBehaviour:
   rainLenght: 20
   rainMaxIntensity: 0.5
   can_weather_change: 1
-  generate_world: 0
+  generate_world: 1
 --- !u!1 &512473163 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
